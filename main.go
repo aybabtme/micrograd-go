@@ -14,21 +14,39 @@ import (
 )
 
 func main() {
-	a := mg.New(2.0, "a")
-	b := mg.New(-3.0, "b")
-	c := mg.New(10.0, "c")
-	e := a.Mul(b, "e")
-	d := e.Add(c, "d")
-	f := mg.New(-2.0, "f")
-	L := d.Mul(f, "L")
+	// a := mg.New(2.0, "a")
+	// b := mg.New(-3.0, "b")
+	// c := mg.New(10.0, "c")
+	// e := a.Mul(b, "e")
+	// d := e.Add(c, "d")
+	// f := mg.New(-2.0, "f")
+	// L := d.Mul(f, "L")
+	// L.Backprop()
+	// mg.DotGraph(L, dot)
+
+	// log.Print(L)
+
+	x1 := mg.New(2.0, "x1")
+	x2 := mg.New(0.0, "x2")
+	w1 := mg.New(-3.0, "w1")
+	w2 := mg.New(1.0, "w2")
+
+	b := mg.New(6.8813735870195432, "b")
+
+	x1w1 := x1.Mul(w1, "x1*w1")
+	x2w2 := x2.Mul(w2, "x2*w2")
+
+	x1w1x2w2 := x1w1.Add(x2w2, "x1*w1 + x2*w2")
+
+	n := x1w1x2w2.Add(b, "n")
+
+	o := n.Tanh("o")
+	o.Backprop()
 
 	dot := bytes.NewBuffer(nil)
 
-	L.Backprop()
+	mg.DotGraph(o, dot)
 
-	mg.DotGraph(L, dot)
-
-	log.Print(L)
 	log.Printf(dot.String())
 	if err := openDot(dot); err != nil {
 		log.Fatal(err)

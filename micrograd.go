@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"math"
 )
 
@@ -73,15 +72,16 @@ func (self *Value) Backprop() {
 	if self.grad == 0.0 {
 		self.grad = 1.0 // initialize it
 	}
+	self.backprop()
+}
+
+func (self *Value) backprop() {
 	if self.backward != nil {
-		log.Printf("branch: backprop of %q", self.label)
 		self.backward()
-	} else {
-		log.Printf("leaf: no backprop for %q", self.label)
 	}
 	for _, prev := range self.prev {
 		if prev != nil {
-			prev.Backprop()
+			prev.backprop()
 		}
 	}
 }
