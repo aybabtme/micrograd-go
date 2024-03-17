@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"math"
 )
 
@@ -18,17 +19,17 @@ type Value struct {
 	backward func()
 }
 
-func New(data scalar, label string) Value {
-	return Value{
+func New(data scalar, label string) *Value {
+	return &Value{
 		data:  data,
 		label: label,
 	}
 }
 
-func (self Value) Add(other Value, label string) Value {
-	out := Value{
+func (self *Value) Add(other *Value, label string) *Value {
+	out := &Value{
 		data:  self.data + other.data,
-		prev:  [2]*Value{&self, &other},
+		prev:  [2]*Value{self, other},
 		op:    "+",
 		label: label,
 	}
@@ -39,10 +40,10 @@ func (self Value) Add(other Value, label string) Value {
 	return out
 }
 
-func (self Value) Mul(other Value, label string) Value {
-	out := Value{
+func (self *Value) Mul(other *Value, label string) *Value {
+	out := &Value{
 		data:  self.data * other.data,
-		prev:  [2]*Value{&self, &other},
+		prev:  [2]*Value{self, other},
 		op:    "*",
 		label: label,
 	}
@@ -53,12 +54,12 @@ func (self Value) Mul(other Value, label string) Value {
 	return out
 }
 
-func (self Value) Tanh(label string) Value {
+func (self *Value) Tanh(label string) *Value {
 	x := self.data
 	t := math.Tanh(x)
-	out := Value{
+	out := &Value{
 		data:  t,
-		prev:  [2]*Value{&self, nil},
+		prev:  [2]*Value{self, nil},
 		op:    "tanh",
 		label: label,
 	}
@@ -68,7 +69,24 @@ func (self Value) Tanh(label string) Value {
 	return out
 }
 
-func (self Value) String() string {
+func (self *Value) Backprop() {
+	if self.grad == 0.0 {
+		self.grad = 1.0 // initialize it
+	}
+	if self.backward != nil {
+		log.Printf("branch: backprop of %q", self.label)
+		self.backward()
+	} else {
+		log.Printf("leaf: no backprop for %q", self.label)
+	}
+	for _, prev := range self.prev {
+		if prev != nil {
+			prev.Backprop()
+		}
+	}
+}
+
+func (self *Value) String() string {
 	return fmt.Sprintf("Value(data=%f)", self.data)
 }
 
@@ -95,7 +113,7 @@ func (self *Value) dotvisit(parent *Value, parentname string, nodes, edges *byte
 	}
 }
 
-func DotGraph(v Value, out io.Writer) (int, error) {
+func DotGraph(v *Value, out io.Writer) (int, error) {
 	nodes := bytes.NewBuffer(nil)
 	edges := bytes.NewBuffer(nil)
 

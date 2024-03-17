@@ -23,10 +23,13 @@ func main() {
 	L := d.Mul(f, "L")
 
 	dot := bytes.NewBuffer(nil)
+
+	L.Backprop()
+
 	mg.DotGraph(L, dot)
 
+	log.Print(L)
 	log.Printf(dot.String())
-
 	if err := openDot(dot); err != nil {
 		log.Fatal(err)
 	}
