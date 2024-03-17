@@ -18,7 +18,7 @@ func main() {
 	dot := bytes.NewBuffer(nil)
 
 	mg.DrawDotGraph(
-		example4(),
+		example5(),
 		dot,
 	)
 
@@ -77,6 +77,31 @@ func example4() *mg.Value {
 
 	f.Backward()
 	return f
+}
+
+func example5() *mg.Value {
+	x1 := mg.New(2.0, "x1")
+	x2 := mg.New(0.0, "x2")
+	w1 := mg.New(-3.0, "w1")
+	w2 := mg.New(1.0, "w2")
+
+	b := mg.New(6.8813735870195432, "b")
+
+	x1w1 := x1.Mul(w1, "x1*w1")
+	x2w2 := x2.Mul(w2, "x2*w2")
+
+	x1w1x2w2 := x1w1.Add(x2w2, "x1*w1 + x2*w2")
+
+	n := x1w1x2w2.Add(b, "n")
+
+	one := mg.New(1, "1")
+	two := mg.New(2, "2")
+	e := two.Mul(n, "2n").Exp("e^2n")
+
+	o := (e.Sub(one, "e-1")).Div(e.Add(one, "e+1"), "o")
+
+	o.Backward()
+	return o
 }
 
 func openDot(r io.Reader) error {

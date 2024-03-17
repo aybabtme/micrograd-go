@@ -50,6 +50,16 @@ func (self *Value) Add(other *Value, label string) *Value {
 	return out
 }
 
+var one = New(-1, "-1")
+
+func (self *Value) Neg(label string) *Value {
+	return self.Mul(one, label)
+}
+
+func (self *Value) Sub(other *Value, label string) *Value {
+	return self.Add(other.Neg("-"+other.label), label)
+}
+
 func (self *Value) Mul(other *Value, label string) *Value {
 	out := &Value{
 		id:    nextID(),
@@ -61,6 +71,28 @@ func (self *Value) Mul(other *Value, label string) *Value {
 	out.backward = func() {
 		self.grad += other.data * out.grad
 		other.grad += self.data * out.grad
+	}
+	return out
+}
+
+func (self *Value) Div(other *Value, label string) *Value {
+	out := self.Mul(other.Pow(-1, ""), "")
+	out.label = label
+	return out
+}
+
+func (self *Value) Pow(other scalar, label string) *Value {
+	out := &Value{
+		id:    nextID(),
+		data:  math.Pow(self.data, other),
+		prev:  [2]*Value{self},
+		op:    "^" + strconv.FormatFloat(other, 'f', -1, 64),
+		label: label,
+	}
+	out.backward = func() {
+		// g(x)  = x^n
+		// g(x)' = n * x^(n-1)
+		self.grad = other * math.Pow(self.data, other-1) * out.grad
 	}
 	return out
 }
@@ -77,6 +109,22 @@ func (self *Value) Tanh(label string) *Value {
 	}
 	out.backward = func() {
 		self.grad += (1 - math.Pow(t, 2)) * out.grad
+	}
+	return out
+}
+
+func (self *Value) Exp(label string) *Value {
+	x := self.data
+	t := math.Exp(x)
+	out := &Value{
+		id:    nextID(),
+		data:  t,
+		prev:  [2]*Value{self, nil},
+		op:    "exp",
+		label: label,
+	}
+	out.backward = func() {
+		self.grad += out.data * out.grad
 	}
 	return out
 }
