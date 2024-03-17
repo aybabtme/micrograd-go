@@ -72,18 +72,52 @@ func (self *Value) Backprop() {
 	if self.grad == 0.0 {
 		self.grad = 1.0 // initialize it
 	}
-	self.backprop()
+	// self.backpropRecurse()
+	self.backpropTopoSort()
 }
 
-func (self *Value) backprop() {
+func (self *Value) backpropRecurse() {
 	if self.backward != nil {
 		self.backward()
 	}
 	for _, prev := range self.prev {
 		if prev != nil {
-			prev.backprop()
+			prev.backpropRecurse()
 		}
 	}
+}
+
+func (self *Value) backpropTopoSort() {
+	topo := TopoSort(self)
+
+	for i := len(topo) - 1; i >= 0; i-- {
+		v := topo[i]
+		if v.backward != nil {
+			v.backward()
+		}
+	}
+}
+
+func TopoSort(v *Value) []*Value {
+	var topo []*Value
+	visited := make(map[*Value]struct{})
+
+	var buildTopo func(v *Value)
+	buildTopo = func(v *Value) {
+		if _, ok := visited[v]; ok {
+			return
+		}
+		visited[v] = struct{}{}
+		for _, child := range v.prev {
+			if child == nil {
+				continue
+			}
+			buildTopo(child)
+		}
+		topo = append(topo, v)
+	}
+	buildTopo(v)
+	return topo
 }
 
 func (self *Value) String() string {
