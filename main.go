@@ -14,18 +14,33 @@ import (
 )
 
 func main() {
-	// a := mg.New(2.0, "a")
-	// b := mg.New(-3.0, "b")
-	// c := mg.New(10.0, "c")
-	// e := a.Mul(b, "e")
-	// d := e.Add(c, "d")
-	// f := mg.New(-2.0, "f")
-	// L := d.Mul(f, "L")
-	// L.Backprop()
-	// mg.DotGraph(L, dot)
 
-	// log.Print(L)
+	dot := bytes.NewBuffer(nil)
 
+	mg.DrawDotGraph(
+		example4(),
+		dot,
+	)
+
+	log.Printf(dot.String())
+	if err := openDot(dot); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func example1() *mg.Value {
+	a := mg.New(2.0, "a")
+	b := mg.New(-3.0, "b")
+	c := mg.New(10.0, "c")
+	e := a.Mul(b, "e")
+	d := e.Add(c, "d")
+	f := mg.New(-2.0, "f")
+	L := d.Mul(f, "L")
+	L.Backward()
+	return L
+}
+
+func example2() *mg.Value {
 	x1 := mg.New(2.0, "x1")
 	x2 := mg.New(0.0, "x2")
 	w1 := mg.New(-3.0, "w1")
@@ -41,16 +56,27 @@ func main() {
 	n := x1w1x2w2.Add(b, "n")
 
 	o := n.Tanh("o")
-	o.Backprop()
+	o.Backward()
+	return o
+}
 
-	dot := bytes.NewBuffer(nil)
+func example3() *mg.Value {
+	a := mg.New(3.0, "a")
+	b := a.Add(a, "b")
 
-	mg.DotGraph(o, dot)
+	b.Backward()
+	return b
+}
 
-	log.Printf(dot.String())
-	if err := openDot(dot); err != nil {
-		log.Fatal(err)
-	}
+func example4() *mg.Value {
+	a := mg.New(-2, "a")
+	b := mg.New(3, "b")
+	d := a.Mul(b, "d")
+	e := a.Add(b, "e")
+	f := d.Mul(e, "f")
+
+	f.Backward()
+	return f
 }
 
 func openDot(r io.Reader) error {
